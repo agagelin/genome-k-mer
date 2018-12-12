@@ -4,23 +4,17 @@ from progressbar import ProgressBar
 
 def get_kmer_freq(k, path):
     start = time()
-    seq = str()
-    with open(path, 'r') as f:
-        for i, line in enumerate(f.readlines()):
-            if i == 0:
-                continue
-            seq += line
-    seq = seq.replace('\n', '')
+    seqs = get_seqs(k, path)
     end_file = time()
-    print('length of the sequence:', len(seq))
     d = dict()
-    l = len(seq)
-    for i in range(l-k):
-        kmer = seq[i:i+k]
-        if kmer not in d:
-            d[kmer] = 1
-        else:
-            d[kmer] += 1
+    for seq in seqs:
+        l = len(seq)
+        for i in range(l-k):
+            kmer = seq[i:i+k]
+            if kmer not in d:
+                d[kmer] = 1
+            else:
+                d[kmer] += 1
     end_algo = time()
 
     print('time file = {:.2e} | time algo = {:.2e}'
@@ -73,10 +67,10 @@ def get_seqs(k, path):
 
 def main():
     path = './data/GCF_000003645.1_ASM364v1_genomic.fna'
-    # for k in (2, 4, int(1e2), int(1e3), int(1e4)):
-    #     print('k:', k)
-    #     d = get_kmer_freq_bin(k, path)
-    get_kmer_freq_bin(int(1e4), path)
+    for k in (2, 4, int(1e2), int(1e3), int(1e4)):
+        print('k:', k)
+        d = get_kmer_freq(k, path)
+    # get_kmer_freq_bin(int(4), path)
 
 # Convertion
 str2bit = {
