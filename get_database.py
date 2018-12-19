@@ -2,6 +2,7 @@ from ftplib import FTP
 import os
 import json
 import re
+import gzip
 ftp = FTP('ftp.ncbi.nih.gov')
 
 ftp.login()
@@ -71,6 +72,14 @@ for clade in clades:
                         fnas = fnas[0]
                     path_retr = outdir+clade+"/"+current_corresp+"/"+fnas
                     ftp.retrbinary("RETR " + fnas ,open(path_retr, 'wb').write)
+                    with gzip.open(path_retr, 'r') as f:
+                        file_content = f.read()
+                        f.close()
+                    with open(path_retr[:-3], "wb") as f:
+                        f.write(file_content)
+                        f.close()
+                    os.remove(path_retr)
+                    
                 
                 faa = [bin for bin in ftp.nlst() if "protein.faa.gz" in bin]
                 if len(faa) < 1:
@@ -82,6 +91,13 @@ for clade in clades:
                         faa = faa[0]
                     path_retr = outdir+clade+"/"+current_corresp+"/"+faa
                     ftp.retrbinary("RETR " + faa ,open(path_retr, 'wb').write)
+                    with gzip.open(path_retr, 'r') as f:
+                        file_content = f.read()
+                        f.close()
+                    with open(path_retr[:-3], "wb") as f:
+                        f.write(file_content)
+                        f.close()
+                    os.remove(path_retr)
                 
 
                     
