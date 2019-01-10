@@ -1,8 +1,6 @@
-from time import time
-from bitstring import Bits
 from progressbar import ProgressBar
 
-def get_kmer_spectrum(k, path):
+def get_kmer_spectrum(k, seq):
     """
     Get the k-mer frequencies.
 
@@ -11,60 +9,70 @@ def get_kmer_spectrum(k, path):
     k: int
         Number of amino-acids.
 
-    path: string
-        Path  to the faa file.
+    full_seq: string
+        Sequence.
 
     Output
     ------
     Spectrum directory built as:
         {k_mer_str: freq, ...}
     """
-
-    seqs = get_seqs(k, path)
     spec_dict = dict()
-    for seq in seqs:
-        l = len(seq)
-        for i in range(l-k):
-            kmer = seq[i:i+k]
+    L = len(seq)
+    for i in range(L-k):
+        kmer = seq[i:i+k]
+        if "N" not in kmer:
             if kmer not in spec_dict:
-                spec_dict[kmer] = 1/(l-k)
+                spec_dict[kmer] = 1/(L-k)
             else:
-                spec_dict[kmer] += 1/(l-k)
+                spec_dict[kmer] += 1/(L-k)
 
     return spec_dict
 
-def get_kmer_freq_bin(k, path):
+def get_kmer_spectrum_win(k, seq, win):
     """
-    Get the k-mer frequencies with k-mers converted in binaries.
+    Get the k-mer frequencies.
 
     Parameters
     ----------
     k: int
         Number of amino-acids.
 
-    path: string
-        Path  to the faa file.
+    full_seq: string
+        Sequence.
 
     Output
     ------
     Spectrum directory built as:
         {k_mer_str: freq, ...}
     """
-    seqs = get_seqs(k, path)
     spec_dict = dict()
+    L = len(seq)
+    win_specs = [dict() for i in range(L-win)]
     bar = ProgressBar()
-    for i, seq in bar(enumerate(seqs)):
-        N = len(seq)
-        seq = convert2bits(seq)
-        l = len(seq)
-        for i in range(l-k):
-            kmer = seq[i*2:(i+k)*2]
-            if kmer not in spec_dict:
-                spec_dict[kmer] = 1/(l-k)
+    for i in bar(range(L-k)):
+        kmer = seq[i:i+k]
+        if "N" in kmer:
+            continue
+        if kmer not in spec_dict:
+            spec_dict[kmer] = 1/(L-k)
+        else:
+            spec_dict[kmer] += 1/(L-k)
+        if i <= len(win_specs):
+            if i - win < 0:
+                for spec in win_specs[:i]:
+                    if kmer not in spec:
+                        spec[kmer] = 1/(L-k)
+                    else:
+                        spec[kmer] += 1/(L-k)
             else:
-                spec_dict[kmer] += 1/(l-k)
+                for spec in win_specs[i - win:i]:
+                    if kmer not in spec:
+                        spec[kmer] = 1/win
+                    else:
+                        spec[kmer] += 1/win
 
-    return spec_dict
+    return spec_dict, win_specs
 
 def load_file(path):
     """
@@ -89,7 +97,7 @@ def load_file(path):
     print('Length of the genome:', len(seq))
     return seq
 
-def get_seqs(k, path):
+def remove_n(k, seq):
     """
     Split sequences when 'N' is found.
     Remove sequency fragment smaller than k.
@@ -99,45 +107,24 @@ def get_seqs(k, path):
     k: int
         Number of amino acid in the k-mer.
 
-    path: string
-        Path to the file
+    seq: string
+        Sequence.
 
     Output
     ------
     Sequencies as list of strings
     """
-    seq = load_file(path)
     seqs = seq.split('N')
-    return [s for s in seqs if len(s) >= k]
-
-def convert2bits(string):
-    seq = Bits()
-    for letter in string:
-        seq += str2bit[letter]
-    return seq
-
-def convert2str(bits):
-    seq = ""
-    N = int(len(bits)/2)
-    for i in range(N):
-        seq += str2bit[bits[i*2:i*2+2]]
-    return seq
+    return [s for s in seqs if len(s[1]) >= k]
 
 def main():
     path = './data/GCF_000003645.1_ASM364v1_genomic.fna'
     for k in (2, 4, int(1e2), int(1e3), int(1e4)):
         print('k:', k)
-        d = get_kmer_freq(k, path)
+        seq = load_file(path)
+        d = get_kmer_spectrum(k, seq)
+        print(d)
     # get_kmer_freq_bin(int(4), path)
-
-# Convertion
-str2bit = {
-    'A': Bits('0b00'),
-    'T': Bits('0b01'),
-    'C': Bits('0b10'),
-    'G': Bits('0b11')
-}
-bit2str = {i: k for k,i  in str2bit.items()}
 
 if __name__ == "__main__":
     main()
