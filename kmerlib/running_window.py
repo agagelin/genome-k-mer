@@ -1,4 +1,6 @@
 from threading import Thread
+from multiprocessing import Process, Manager
+from time import sleep
 
 from progressbar import ProgressBar
 
@@ -30,8 +32,7 @@ def running_dist(k, seq, full_spec, win, step=1):
     step: int
         Step between windows.
 
-    Output
-    ------
+    Output ------
     Distances as a list of floats.
     """
 
@@ -67,10 +68,10 @@ def running_dist(k, seq, full_spec, win, step=1):
     return distances
 
   ############################
-## MULTITHREAD DISTANCE TOOLS #################################################
+## MULTIPROCESS DISTANCE TOOLS ################################################
   ############################
 
-def multithread_running_dist(k, seq, full_spec, win, step=1, n_thread=4):
+def multiprocess_running_dist(k, seq, full_spec, win, step=1, n_process=4):
     """
     Compute distance on a running window.
 
@@ -91,8 +92,8 @@ def multithread_running_dist(k, seq, full_spec, win, step=1, n_thread=4):
     step: int
         Step between windows.
 
-    n_thread: int
-        Number of thread to use
+    n_process: int
+        Number of process to use
 
     Output
     ------
@@ -100,59 +101,54 @@ def multithread_running_dist(k, seq, full_spec, win, step=1, n_thread=4):
     """
     # Initialization ----------------------------------------------------------
     L = len(seq)
-    L_thread = (L-k-win) // n_thread
-    thds = list()
+    L_process = (L-k-win) // n_process
+    jobs = list()
     distances = list()
+    manager = Manager()
+    results = manager.list([None]*n_process)
 
-    # Iterate on threads ------------------------------------------------------
-    for i in range(n_thread):
+    # Iterate on tasks --------------------------------------------------------
+    for i in range(n_process):
 
-        # > If last thread
-        if i == n_thread - 1:
+        # > If last process
+        if i == n_process - 1:
             stop = L
-        # > For the other threads
+        # > For the other processes
         else:
-            stop = (i + 1)*L_thread + k + win - 2
+            stop = (i + 1)*L_process + k + win - 2
 
+        # > If first process
         if i == 0:
             start = 0
+        # > For the others
         else:
-            if i*L_thread % step != 0:
-                start = i*L_thread + step - ((i*L_thread) % step)
+            if i*L_process % step != 0:
+                start = i*L_process + step - ((i*L_process) % step)
             else:
-                start = i*L_thread
+                start = i*L_process
 
-        # > Get sequences for threads
+        # > Get sequences for processes
         trunc_seq = seq[start:stop]
 
-        # > Launch thread
-        thd = RunningDistThread(k, trunc_seq, full_spec, win, step)
-        thd.start()
-        thds.append(thd)
+        # > Launch task
+        job = Process(target=worker,
+                      args=(results, i, k, trunc_seq, full_spec, win, step))
+        job.start()
+        jobs.append(job)
 
-    # Iterate on treads -------------------------------------------------------
-    for thd in thds:
-        thd.join()
-        if thd.distances == None:
-            raise Exception("Error in one thread")
+    # Iterate on tasks --------------------------------------------------------
+    for job in jobs:
+        # > Wait the end of the execution
+        job.join()
 
-        # > Retrieve distances
-        distances += thd.distances
+    # > Retrieve results
+    for r in results:
+        distances.extend(r)
 
     return distances
 
-class RunningDistThread(Thread):
-    """
-    Running distance thread.
-    """
-    def __init__(self, *args, **kwargs):
-        Thread.__init__(self)
-        self.args = args
-        self.kwargs = kwargs
-        self.distances = None
-
-    def run(self):
-        self.distances = running_dist(*self.args, **self.kwargs)
+def worker(results, i, *args, **kwargs):
+    results[i] = running_dist(*args, **kwargs)
 
   #########
 ## FILTERS ####################################################################
