@@ -16,7 +16,7 @@ for clade in clades:
     with open('data/list_orgs/'+clade+'.json') as f:
         ls_orgs_clade = json.load(f)
     for org in ls_orgs_clade:
-        print('--------->', org, '<---------')
+        print('--------->', org, '<---------', sep = "  ")
         ftp.cwd(root)
         ftp.cwd(clade)
         ls_orgs_ncbi = ftp.nlst()
@@ -41,7 +41,12 @@ for clade in clades:
                 select_assembly = [dir for dir in ls_dir if 'all_assembly' in dir]
                 if len(select_assembly) > 1:
                     print("More than one dir correspondig to 'all_assembly' for", org, "=> firt selected")
-                select_assembly = select_assembly[0] + "/suppressed"
+                select_assembly = select_assembly[0]
+                ftp.cwd(select_assembly)
+                ls_all_assembly = ftp.nlst()
+                if any(i == "suppressed" for i in ls_all_assembly):
+                    select_assembly = select_assembly + "/suppressed"
+                ftp.cwd("..")
                     
             elif len(select_assembly) > 1:
                 print("More than one dir correspondig to 'latest_assembly' for", org, "=> firt selected")
