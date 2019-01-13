@@ -88,7 +88,7 @@ def kmer_spectrum(k, seq, normalize=True):
     Parameters
     ----------
     k: int
-        Number of amino-acids in K-mers.
+        Number of nucleic acids in K-mers.
 
     full_seq: string
         DNA sequence.
@@ -121,7 +121,7 @@ def mproc_kmer_spectrum(k, seq, normalize=True, n_process=4):
     Parameters
     ----------
     k: int
-        Number of amino-acids in K-mers.
+        Number of nucleic acids in K-mers.
 
     full_seq: string
         DNA sequence.

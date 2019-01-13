@@ -1,9 +1,9 @@
 from math import sqrt
 from .spectrum import Spectrum
 
-def load_file(path, verbose=False):
+def load_seq_file(path, verbose=False):
     """
-    Load fna file.
+    Load fna/faa file.
 
     Parameter
     ---------

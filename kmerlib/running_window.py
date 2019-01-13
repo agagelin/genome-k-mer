@@ -17,7 +17,7 @@ def running_dist(k, seq, full_spec, win, step=1, fast=True):
     Parameters
     ----------
     k: int
-        Number of amino acid in the K-mers.
+        Number of nucleic acid in the K-mers.
 
     seq: str
         Sequence to use.
@@ -46,7 +46,7 @@ def running_dist(k, seq, full_spec, win, step=1, fast=True):
     for i in range(L-k+1):
         kmer = seq[i:i+k]
 
-        # > Discard K-mers containing not defined amino acids
+        # > Discard K-mers containing not defined nucleic acids
         if "N" not in kmer:
 
             # > Add window each steps
@@ -83,7 +83,7 @@ def mproc_running_dist(k, seq, full_spec, win, step=1, fast=True, n_process=4):
     Parameters
     ----------
     k: int
-        Number of amino acid in the K-mers.
+        Number of nucleic acid in the K-mers.
 
     seq: str
         Sequence to use.
