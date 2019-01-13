@@ -1,7 +1,8 @@
 import json
 import os
-
 from pathlib import Path
+
+import progressbar
 
 data_dir = Path("./data/running_window_data")
 files = os.listdir(str(data_dir))
@@ -15,7 +16,11 @@ for json_file in files:
     if name not in data:
         data[name] = current
     else:
-        data[name]["distances"].update(current["distances"])
+        for k in current["distances"]:
+            if k not in data[name]["distances"]:
+                data[name]["distances"][k] = current["distances"][k]
+            else:
+                data[name]["distance"][k].update(current["distances"][k])
 data = [data[k] for k in data]
 
 with open(str(output_file), "w") as f:
