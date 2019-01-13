@@ -2,16 +2,15 @@ from threading import Thread
 from multiprocessing import Process, Manager
 from time import sleep
 
-from progressbar import ProgressBar
-
-from .tools import dist
+from .tools import *
 from .spectrum import Spectrum
+from utils.term_colors import *
 
   ################
 ## DISTANCE TOOLS #############################################################
   ################
 
-def running_dist(k, seq, full_spec, win, step=1):
+def running_dist(k, seq, full_spec, win, step=1, fast=True):
     """
     Compute distance on a running window.
 
@@ -32,10 +31,12 @@ def running_dist(k, seq, full_spec, win, step=1):
     step: int
         Step between windows.
 
+    fast: boolean
+        Use fast mode.
+
     Output ------
     Distances as a list of floats.
     """
-
     # Initialization ----------------------------------------------------------
     L = len(seq)
     win_specs = []
@@ -63,15 +64,19 @@ def running_dist(k, seq, full_spec, win, step=1):
             if (i - win + 1) % step == 0 and i >= win-1:
                 win_spec = win_specs.pop(0)
                 win_spec.normalize(win)
-                distances.append(dist(full_spec, win_spec))
+                if fast:
+                    distances.append(faster_dist(full_spec, win_spec))
+                else:
+                    distances.append(dist(full_spec, win_spec))
 
     return distances
 
-  ############################
-## MULTIPROCESS DISTANCE TOOLS ################################################
-  ############################
 
-def multiprocess_running_dist(k, seq, full_spec, win, step=1, n_process=4):
+  #############################
+## MULTIPROCESS DISTANCE TOOLS ################################################
+  #############################
+
+def mproc_running_dist(k, seq, full_spec, win, step=1, fast=True, n_process=4):
     """
     Compute distance on a running window.
 
@@ -91,6 +96,9 @@ def multiprocess_running_dist(k, seq, full_spec, win, step=1, n_process=4):
 
     step: int
         Step between windows.
+
+    fast: boolean
+        Use fast mode.
 
     n_process: int
         Number of process to use
@@ -131,18 +139,23 @@ def multiprocess_running_dist(k, seq, full_spec, win, step=1, n_process=4):
         trunc_seq = seq[start:stop]
 
         # > Launch task
-        job = Process(target=worker,
-                      args=(results, i, k, trunc_seq, full_spec, win, step))
+        job = Process(
+            target=worker,
+            args=(results, i, k, trunc_seq, full_spec, win, step, fast)
+        )
         job.start()
         jobs.append(job)
 
     # Iterate on tasks --------------------------------------------------------
-    for job in jobs:
+    for i, job in enumerate(jobs):
         # > Wait the end of the execution
         job.join()
 
     # > Retrieve results
     for r in results:
+        if r is None:
+            raise Exception("Error in cumputing, you may reduce number of"
+                            "processes")
         distances.extend(r)
 
     return distances
@@ -180,3 +193,10 @@ def running_average(X, win):
         if i + 1 > win:
             rslt.append((cumsum[-1] - cumsum[-win -1]) / win)
     return rslt
+
+  #######
+## TOOLS ######################################################################
+  #######
+
+def get_idx(k, seq, win, step):
+    return list(range(1, len(seq) - win - k + 3, step))

@@ -1,6 +1,5 @@
 from math import sqrt
 from .spectrum import Spectrum
-from progressbar import ProgressBar
 
 def load_file(path, verbose=False):
     """
@@ -60,5 +59,29 @@ def dist(spec1, spec2):
     for k in (k2 - k1):
         d += spec2[k]
 
-    return d
+    return d/2.
 
+def faster_dist(spec1, spec2):
+    """
+    Compute distance between two spectra.
+    Iterate on spec2, for better performance send longest spectrum as spec1.
+
+    Parameters
+    ----------
+    spec1, spec2: Spectrum objects
+
+    Output
+    ------
+    Distance
+    """
+    # > d = distance
+    d = 2
+
+    # Iterate on K-mers of spec2 U spec1 --------------------------------------
+    for k in spec2.kmers():
+        if k in spec1.kmer_freqs:
+            d += sqrt((spec1[k] - spec2[k])**2)
+            d -= spec1[k]
+            d -= spec2[k]
+
+    return d/2.
