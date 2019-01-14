@@ -90,8 +90,8 @@ def compute_cds_spectrum (k, clades = ["archaea", "bacteria"]):
         #     spectrums[clade][org][name] = get_kmer_spectrum(seq)
         
 def main():
-    compute_cds_spectrum(k = 4)
-    ls_ks = [2, 3, 5, 6, 9]
+    ls_ks = [2, 3, 4, 5, 6, 9]
+    ls_ks = [6]
     for k in ls_ks:
         print("\n#########################", k, "#########################")
         compute_cds_spectrum (k = k)
