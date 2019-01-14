@@ -1,4 +1,5 @@
 import copy
+import json
 from multiprocessing import Process, Manager
 
   #################
@@ -32,11 +33,23 @@ class Spectrum:
 
 
     # TOOLS -------------------------------------------------------------------
-    def normalize(self, coef):
+    def normalize(self, coef = None):
+        if not coef:
+            coef = 0
+            for v in self.kmer_freqs.values():
+                coef += v
         for k in self.kmer_freqs:
             self.kmer_freqs[k] = self.kmer_freqs[k] / coef
         self.normalized = True
 
+    def load(self, path):
+        with open(path, "r") as f:
+            self.kmer_freqs = json.load(f)
+
+    def save(self, path):
+        with open(path, "w") as f:
+            json.dump(self.kmer_freqs, f, indent = 4)
+    
     # ACCESS DATA -------------------------------------------------------------
     def kmers(self):
         return list(self.kmer_freqs.keys())
