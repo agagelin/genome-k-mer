@@ -18,15 +18,18 @@ class Spectrum:
 
         Parameters
         ----------
-        kmer_freqs: dict
+        kmer_freqs: dict or string
             Dictionary of K-mer frequencies built as:
                 {<kmer_str>: <frequency>}
+            or a path to the save.
 
         normalized: boolean
             Set it to True if kmer_freqs is normalized.
         """
         if kmer_freqs is None:
             self.kmer_freqs = dict()
+        elif type(kmer_freqs) is str:
+            self.load(kmer_freqs)
         else:
             self.kmer_freqs = kmer_freqs
         self.normalized = normalized
