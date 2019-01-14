@@ -108,7 +108,6 @@ def get_annotation_full_database(include_pseudogenes,
                                  skip_suppressed = True):
     path = "data/"
     path = path+"/" if not path.endswith("/") else path
-    paths = [path+clade+"/" for clade in clades]
     paths = list()
     for clade in clades:
         list_org = os.listdir(path+clade)
