@@ -9,12 +9,17 @@ ftp.login()
 root = '/genomes/refseq/'
 outdir = 'data/'
 clades = ['archaea', 'bacteria']
-
+organism_list = [
+    "Halovivax_asiaticus",
+    "Acidianus_brierleyi"
+]
 for clade in clades:
     if not os.path.exists(outdir+clade):
         os.makedirs(outdir+clade)
     with open('data/list_orgs/'+clade+'.json') as f:
-        ls_orgs_clade = json.load(f)
+        # ls_orgs_clade = json.load(f)
+
+        ls_orgs_clade = organism_list
     for org in ls_orgs_clade:
         print('--------->', org, '<---------', sep = "  ")
         ftp.cwd(root)
